@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CENTURION OMEGA 2026 | Pro</title>
+    <style>
+        :root {
+            --bg: #05070a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00d4ff;
+            --gold: #ffcc00;
+            --silver: #e2e8f0;
+            --success: #00e676;
+            --danger: #ff4b2b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+
+        #app-container { width: 100%; max-width: 450px; height: 95vh; background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 30px; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.8); }
+
+        /* Multi-Tab Navigation */
+        .tabs { display: flex; overflow-x: auto; padding: 15px 5px; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: none; border: none; color: #666; font-size: 0.7rem; font-weight: bold; cursor: pointer; padding: 0 15px; text-transform: uppercase; white-space: nowrap; transition: 0.3s; }
+        .tab-btn.active { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
+
+        .screen { flex: 1; overflow-y: auto; padding: 20px; display: none; }
+        .screen.active { display: block; animation: slideUp 0.3s ease; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Calculator UI */
+        .calc-display { background: rgba(0,0,0,0.5); padding: 25px; border-radius: 20px; text-align: right; margin-bottom: 20px; border: 1px solid var(--border); }
+        #prev { color: #555; font-size: 0.9rem; min-height: 1.2rem; }
+        #curr { font-size: 2.8rem; font-weight: bold; color: var(--accent); }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        button.key { height: 60px; border-radius: 15px; border: 1px solid var(--border); background: var(--glass); color: #fff; font-size: 1.3rem; cursor: pointer; transition: 0.1s; }
+        button.key:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+        .op { color: var(--accent); }
+        .eq { background: var(--accent) !important; color: #000 !important; grid-column: span 2; }
+        .sp { color: var(--gold); }
+
+        /* Card Elements */
+        .card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 15px; }
+        label { display: block; font-size: 0.7rem; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        input, select { width: 100%; padding: 14px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 12px; margin-bottom: 15px; font-size: 1rem; }
+        .btn-action { width: 100%; padding: 16px; background: var(--accent); color: #000; border: none; border-radius: 15px; font-weight: 800; cursor: pointer; }
+
+        /* Market Rates & Animations */
+        .rate-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .gold-text, .silver-text { transition: color 0.5s ease, opacity 0.3s ease; }
+        .live-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--success); animation: blink 1.5s infinite; }
+        @keyframes blink { 0% {opacity:1} 50% {opacity:0.3} 100% {opacity:1} }
+
+        /* Secret Game Overlay */
+        #vault { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; padding: 30px; border-radius: 30px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <nav class="tabs">
+        <button class="tab-btn active" onclick="openTab('calc', this)">Calc</button>
+        <button class="tab-btn" onclick="openTab('market', this)">Market</button>
+        <button class="tab-btn" onclick="openTab('valuator', this)">Valuator</button>
+        <button class="tab-btn" onclick="openTab('units', this)">Units</button>
+        <button class="tab-btn" onclick="openTab('emi', this)">EMI</button>
+    </nav>
+
+    <section id="calc" class="screen active">
+        <div class="calc-display">
+            <div id="prev"></div>
+            <div id="curr">0</div>
+        </div>
+        <div class="grid">
+            <button class="key sp" onclick="cls()">AC</button>
+            <button class="key sp" onclick="del()">DEL</button>
+            <button class="key op" onclick="ins('%')">%</button>
+            <button class="key op" onclick="ins('/')">÷</button>
+            <button class="key" onclick="ins('7')">7</button>
+            <button class="key" onclick="ins('8')">8</button>
+            <button class="key" onclick="ins('9')">9</button>
+            <button class="key op" onclick="ins('*')">×</button>
+            <button class="key" onclick="ins('4')">4</button>
+            <button class="key" onclick="ins('5')">5</button>
+            <button class="key" onclick="ins('6')">6</button>
+            <button class="key op" onclick="ins('-')">-</button>
+            <button class="key" onclick="ins('1')">1</button>
+            <button class="key" onclick="ins('2')">2</button>
+            <button class="key" onclick="ins('3')">3</button>
+            <button class="key op" onclick="ins('+')">+</button>
+            <button class="key" onclick="ins('0')">0</button>
+            <button class="key" onclick="ins('.')">.</button>
+            <button class="key eq" onclick="exe()">=</button>
+        </div>
+    </section>
+
+    <section id="market" class="screen">
+        <h3 style="color:var(--gold); margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+            Live Market <span class="live-dot"></span>
+        </h3>
+        <div class="card">
+            <div class="rate-row"><span>Gold (24K/10g)</span><span class="gold-text" id="g24">78,450</span></div>
+            <div class="rate-row"><span>Gold (22K/10g)</span><span class="gold-text" id="g22">71,900</span></div>
+            <div class="rate-row"><span>Silver (1 KG)</span><span class="silver-text" id="s1k">94,200</span></div>
+            <p style="font-size:0.6rem; color:#555; margin-top:10px;">*Centurion API: Real-time Bhopal estimates 2026.</p>
+        </div>
+    </section>
+
+    <section id="valuator" class="screen">
+        <h3 style="color:var(--accent); margin-bottom:15px;">Note Valuator</h3>
+        <div class="card">
+            <label>Select Note (Current 2026)</label>
+            <select id="noteType">
+                <option value="500">500 (Current)</option>
+                <option value="200">200 (Current)</option>
+                <option value="100">100 (New Lavender)</option>
+                <option value="50">50 (Hampi Blue)</option>
+                <option value="20">20(Current)</option>
+                <option value="10">10 (Chocolate Brown)</option>
+            </select>
+            <label>Serial Number</label>
+            <input type="text" id="serialNum" placeholder="Ex: 786AB123456">
+            <button class="btn-action" onclick="checkNote()">Estimate Value</button>
+        </div>
+        <div id="noteRes" style="display:none; text-align:center;">
+            <h2 id="notePrice" style="color:var(--success); font-size: 2.2rem;">0</h2>
+            <p id="noteTier" style="color:var(--gold); font-size:0.8rem;"></p>
+        </div>
+    </section>
+
+    <section id="units" class="screen">
+        <h3>Unit Converter</h3>
+        <div class="card">
+            <label>Feet to Inches</label>
+            <input type="number" id="feetIn" placeholder="Enter feet" oninput="unitConv()">
+            <div style="text-align:center;">
+                <p style="color:#666; font-size:0.8rem;">Result in Inches</p>
+                <h1 id="inchOut" style="color:var(--accent)">0</h1>
+            </div>
+        </div>
+    </section>
+
+    <section id="emi" class="screen">
+        <h3>EMI Calculator</h3>
+        <div class="card">
+            <label>Amount: <span id="p-txt">100000</span></label>
+            <input type="range" id="p-sld" min="10000" max="10000000" step="10000" value="100000" oninput="emiCalc()">
+            <label>Tenure: <span id="y-txt">5</span> Years</label>
+            <input type="range" id="y-sld" min="1" max="25" step="1" value="5" oninput="emiCalc()">
+            <h2 id="emi-out" style="text-align:center; color:var(--accent); margin-top:20px;">0</h2>
+        </div>
+    </section>
+
+    <div id="vault">
+        <h2 style="color:var(--gold)">SECRET VAULT</h2>
+        <p style="margin:20px 0; color:#888;">Number Guessing Game (1-50)</p>
+        <input type="number" id="guess" style="width:80px; text-align:center; margin:0 auto 20px;">
+        <button class="btn-action" onclick="play()">Guess</button>
+        <p id="hint" style="margin-top:20px; color:var(--accent)"></p>
+        <button onclick="document.getElementById('vault').style.display='none'" style="margin-top:40px; background:red; border:none; padding:10px; border-radius:10px; color:#fff;">Close</button>
+    </div>
+</div>
+
+<script>
+    let exp = '';
+    let target = Math.floor(Math.random() * 50) + 1;
+    
+    // Market Data Persistence
+    let market = { g24: 78450, s1k: 94200 };
+
+    function vib() { if(window.navigator.vibrate) window.navigator.vibrate(40); }
+
+    function openTab(id, btn) {
+        vib();
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Centurion Live API Simulation
+    function updateMarket() {
+        const g24El = document.getElementById('g24');
+        const g22El = document.getElementById('g22');
+        const s1kEl = document.getElementById('s1k');
+
+        // Logic for fluctuation
+        let changeGold = (Math.random() * 40) - 20; 
+        let changeSilver = (Math.random() * 100) - 50;
+
+        let oldGold = market.g24;
+        market.g24 += changeGold;
+        market.s1k += changeSilver;
+
+        // Visual Colors (Green if up, Red if down)
+        g24El.style.color = market.g24 > oldGold ? "var(--success)" : "var(--danger)";
+        s1kEl.style.color = changeSilver > 0 ? "var(--success)" : "var(--danger)";
+
+        // Update UI
+        g24El.innerText = "" + Math.round(market.g24).toLocaleString();
+        g22El.innerText = "" + Math.round(market.g24 * 0.916).toLocaleString();
+        s1kEl.innerText = "" + Math.round(market.s1k).toLocaleString();
+
+        // Reset color after 2 seconds
+        setTimeout(() => {
+            g24El.style.color = "var(--gold)";
+            g22El.style.color = "var(--gold)";
+            s1kEl.style.color = "var(--silver)";
+        }, 2000);
+    }
+
+    // Calc Logic
+    function ins(v) { vib(); exp += v; up(); }
+    function cls() { vib(); exp = ''; document.getElementById('prev').innerText = ''; up(); }
+    function del() { vib(); exp = exp.slice(0,-1); up(); }
+    function up() { document.getElementById('curr').innerText = exp || '0'; }
+    function exe() {
+        vib();
+        if(exp === '2026') { document.getElementById('vault').style.display = 'flex'; cls(); return; }
+        try {
+            let res = eval(exp.replace(/÷/g, '/').replace(/×/g, '*'));
+            document.getElementById('prev').innerText = exp + ' =';
+            exp = res.toString(); up();
+        } catch(e) { document.getElementById('curr').innerText = 'Err'; }
+    }
+
+    // Valuator
+    function checkNote() {
+        vib();
+        let s = document.getElementById('serialNum').value.toUpperCase();
+        let d = parseInt(document.getElementById('noteType').value);
+        let p = d; let t = "Common Note";
+        if(s.includes("786")) { p += 1500; t = "Lucky 786"; }
+        if(/(\d)\1{5}/.test(s)) { p += 12000; t = "Solid Number (Rare)"; }
+        document.getElementById('noteRes').style.display = 'block';
+        document.getElementById('notePrice').innerText = "" + p.toLocaleString();
+        document.getElementById('noteTier').innerText = t;
+    }
+
+    // Units
+    function unitConv() {
+        let f = document.getElementById('feetIn').value;
+        document.getElementById('inchOut').innerText = (f * 12).toFixed(2);
+    }
+
+    // EMI
+    function emiCalc() {
+        let p = document.getElementById('p-sld').value;
+        let y = document.getElementById('y-sld').value;
+        document.getElementById('p-txt').innerText = p;
+        document.getElementById('y-txt').innerText = y;
+        let emi = (p * 1.15) / (y * 12);
+        document.getElementById('emi-out').innerText = "" + Math.round(emi).toLocaleString() + "/mo";
+    }
+
+    // Game
+    function play() {
+        let g = document.getElementById('guess').value;
+        let h = document.getElementById('hint');
+        if(g == target) { h.innerText = " Unlocked! Correct!"; target = Math.floor(Math.random()*50)+1; }
+        else { h.innerText = g > target ? "Too High!" : "Too Low!"; }
+    }
+
+    // Start Market Engine
+    setInterval(updateMarket, 5000); 
+    emiCalc();
+    updateMarket();
+</script>
+</body>
+</html>
+tip- 2026 and pres =
